@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="#1E1E1E"
+            android:background="@android:color/white"
             android:orientation="vertical"
             android:padding="24dp">
 
@@ -25,8 +25,8 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="32dp"
                 android:text="Set end time"
-                android:textColor="@android:color/white"
-                android:textSize="16sp" />
+                android:textColor="@color/titleColor"
+                android:textSize="14sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -46,8 +46,8 @@
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
                     android:text=":"
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp" />
+                    android:textColor="@color/titleColor"
+                    android:textSize="18sp" />
 
                 <NumberPicker
                     android:id="@+id/picker_sec"
@@ -60,8 +60,8 @@
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
                     android:text="."
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp" />
+                    android:textColor="@color/titleColor"
+                    android:textSize="18sp" />
 
                 <NumberPicker
                     android:id="@+id/picker_ms"
@@ -84,7 +84,8 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_button_outline"
                     android:text="Cancel"
-                    android:textColor="#AAAAAA" />
+                    android:textColor="#555555"
+                    android:textSize="13sp" />
 
                 <Button
                     android:id="@+id/button_picker_ok"
@@ -94,7 +95,8 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_button_filled"
                     android:text="OK"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
 
             </LinearLayout>
         </LinearLayout>
@@ -104,7 +106,7 @@
         android:id="@+id/layout_loading_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#AA000000"
+        android:background="@android:color/transparent"
         android:clickable="true"
         android:elevation="50dp"
         android:visibility="gone">
@@ -113,20 +115,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@drawable/bg_tooltip"
+            android:background="@drawable/bg_dialog"
+            android:elevation="12dp"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="32dp">
+            android:padding="24dp">
 
             <ProgressBar
                 android:id="@+id/progress_export"
                 style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="200dp"
+                android:layout_width="220dp"
                 android:layout_height="8dp"
                 android:indeterminate="false"
                 android:max="100"
                 android:progress="0"
-                android:progressTint="@color/colorPrimary" />
+                android:progressTint="@color/gmaGreen" />
 
             <TextView
                 android:id="@+id/text_export_status"
@@ -134,9 +137,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Exporting... 0%"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textColor="@color/titleColor"
+                android:textSize="13sp" />
 
         </LinearLayout>
     </FrameLayout>
