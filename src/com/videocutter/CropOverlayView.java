@@ -146,7 +146,7 @@ public class CropOverlayView extends View {
         path.setFillType(Path.FillType.EVEN_ODD);
         path.addRect(0f, 0f, getWidth(), getHeight(), Path.Direction.CW);
         path.addRect(cropRect, Path.Direction.CW);
-        canvas.drawPath(path, dimPaint);
+        // No dimming outside the crop box; only the border, grid and handles are drawn
 
         canvas.drawRect(cropRect, borderPaint);
 
