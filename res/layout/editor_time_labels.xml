@@ -40,7 +40,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Start minus one frame"
                 android:src="@drawable/fast_rewind_24px"
-                android:tint="#B0B0B0" />
+                android:tint="#808080" />
 
             <ImageButton
                 android:id="@+id/button_start_minus_tenth"
@@ -49,7 +49,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Start minus 0.1s"
                 android:src="@drawable/remove_24px"
-                android:tint="#808080" />
+                android:tint="#555555" />
 
             <TextView
                 android:id="@+id/text_start_time"
@@ -69,7 +69,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Start plus 0.1s"
                 android:src="@drawable/add_24px"
-                android:tint="#808080" />
+                android:tint="#555555" />
 
             <ImageButton
                 android:id="@+id/button_start_plus_frame"
@@ -78,7 +78,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Start plus one frame"
                 android:src="@drawable/fast_forward_24px"
-                android:tint="#B0B0B0" />
+                android:tint="#808080" />
         </LinearLayout>
 
         <LinearLayout
@@ -96,7 +96,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="End minus one frame"
                 android:src="@drawable/fast_rewind_24px"
-                android:tint="#B0B0B0" />
+                android:tint="#808080" />
 
             <ImageButton
                 android:id="@+id/button_end_minus_tenth"
@@ -105,7 +105,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="End minus 0.1s"
                 android:src="@drawable/remove_24px"
-                android:tint="#808080" />
+                android:tint="#555555" />
 
             <TextView
                 android:id="@+id/text_end_time"
@@ -125,7 +125,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="End plus 0.1s"
                 android:src="@drawable/add_24px"
-                android:tint="#808080" />
+                android:tint="#555555" />
 
             <ImageButton
                 android:id="@+id/button_end_plus_frame"
@@ -134,7 +134,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="End plus one frame"
                 android:src="@drawable/fast_forward_24px"
-                android:tint="#B0B0B0" />
+                android:tint="#808080" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
