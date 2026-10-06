@@ -10,7 +10,7 @@
         android:id="@+id/layout_thumbnails"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#222222"
+        android:background="#E0E0E0"
         android:orientation="horizontal" />
 
     <View
