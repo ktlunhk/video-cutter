@@ -1089,7 +1089,7 @@ public class EditorActivity extends Activity {
     }
 
     private void offerShare(final Uri savedUri) {
-        new AlertDialog.Builder(this)
+        DialogStyler.shrink(new AlertDialog.Builder(this)
                 .setTitle("Export complete")
                 .setMessage("Share the trimmed video now?")
                 .setPositiveButton("Share", new DialogInterface.OnClickListener() {
@@ -1108,7 +1108,7 @@ public class EditorActivity extends Activity {
                     }
                 })
                 .setNegativeButton("Done", null)
-                .show();
+                .show());
     }
 
     private String queryString(Uri uri, String column) {
