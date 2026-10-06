@@ -18,8 +18,8 @@
 
         <ImageView
             android:id="@+id/image_album_art"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:src="@drawable/vide_shadow"
@@ -62,7 +62,7 @@
             android:layout_centerVertical="true"
             android:layout_toEndOf="@id/image_album_art"
             android:layout_toStartOf="@id/layout_buttons"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="12dp"
             android:orientation="vertical">
 
             <TextView
