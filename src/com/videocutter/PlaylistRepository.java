@@ -285,9 +285,16 @@ public final class PlaylistRepository {
             String title = fallbackTitleFor(uri);
             long size = 0L;
 
+            // Plain file path (from the in-app chooser): name and size come from the File
+            if ("file".equals(uri.getScheme()) && uri.getPath() != null) {
+                File f = new File(uri.getPath());
+                title = stripExtension(f.getName());
+                size = f.length();
+            }
+
             // OpenableColumns works for SAF document URIs
             Cursor cursor = null;
-            try {
+            if (!"file".equals(uri.getScheme())) try {
                 cursor = context.getContentResolver().query(uri,
                         new String[]{OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE},
                         null, null, null);
@@ -307,7 +314,7 @@ public final class PlaylistRepository {
 
             // Prefer MediaStore metadata when available
             cursor = null;
-            try {
+            if (!"file".equals(uri.getScheme())) try {
                 cursor = context.getContentResolver().query(uri,
                         new String[]{MediaStore.Video.Media.TITLE,
                                 MediaStore.Video.Media.DISPLAY_NAME,
