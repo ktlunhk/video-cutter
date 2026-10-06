@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@android:color/white"
     android:fitsSystemWindows="true">
 
     <EditText
@@ -42,7 +42,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Seek to start"
             android:src="@drawable/skip_previous_24px"
-            android:tint="@android:color/white" />
+            android:tint="@color/titleColor" />
 
         <ImageButton
             android:id="@+id/button_play_pause"
@@ -52,7 +52,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Play"
             android:src="@drawable/play_arrow_24px"
-            android:tint="@android:color/white" />
+            android:tint="@color/titleColor" />
 
         <ImageButton
             android:id="@+id/button_crop"
@@ -62,7 +62,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Toggle crop"
             android:src="@drawable/crop_24px"
-            android:tint="@android:color/white" />
+            android:tint="@color/titleColor" />
     </LinearLayout>
 
     <include
@@ -133,7 +133,7 @@
         android:padding="12dp"
         android:scaleType="fitCenter"
         android:src="@drawable/replay_24px"
-        android:tint="@android:color/white" />
+        android:tint="@color/titleColor" />
 
     <ImageButton
         android:id="@+id/button_save_check"
@@ -149,7 +149,7 @@
         android:padding="12dp"
         android:scaleType="fitCenter"
         android:src="@drawable/save_24px"
-        android:tint="@android:color/white" />
+        android:tint="@color/titleColor" />
 
     <include layout="@layout/editor_overlays" />
 
