@@ -1,5 +1,6 @@
 package com.videocutter;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -9,6 +10,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -26,6 +29,8 @@ import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -39,6 +44,7 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -70,6 +76,7 @@ public class MainActivity extends Activity
     private static final int REQ_PICK = 101;
     private static final int REQ_RELINK = 102;
     private static final int REQ_WRITE = 103;
+    private static final int REQ_STORAGE_PERM = 104;
     private static final int NO_POSITION = -1;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -92,6 +99,7 @@ public class MainActivity extends Activity
     private VideoFile pendingUpdateFile;
     private String pendingUpdateTitle;
     private VideoFile pendingRelinkFile;
+    private int pendingPickRequest = REQ_PICK;
 
     // ------------------------------------------------------------------
     // Lifecycle
@@ -143,6 +151,8 @@ public class MainActivity extends Activity
             }
         });
 
+        setupDraggableFab(findViewById(R.id.fab_add_video));
+
         updateSortIcon();
         PlaylistRepository.addListener(this);
         onPlaylistChanged(PlaylistRepository.getFullPlaylist());
@@ -179,6 +189,77 @@ public class MainActivity extends Activity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return false;
+    }
+
+    // ------------------------------------------------------------------
+    // Draggable add button (so it can be moved off the remove buttons)
+    // ------------------------------------------------------------------
+
+    private static final String FAB_PREFS = "video_cutter_fab";
+
+    private void setupDraggableFab(final View fab) {
+        final int slop = ViewConfiguration.get(this).getScaledTouchSlop();
+        final SharedPreferences prefs = getSharedPreferences(FAB_PREFS, Context.MODE_PRIVATE);
+
+        // Restore the last position (stored as fractions of the free area)
+        fab.post(new Runnable() {
+            @Override
+            public void run() {
+                View parent = (View) fab.getParent();
+                if (!prefs.contains("fx") || parent == null) return;
+                float maxX = Math.max(0, parent.getWidth() - fab.getWidth());
+                float maxY = Math.max(0, parent.getHeight() - fab.getHeight());
+                fab.setX(prefs.getFloat("fx", 1f) * maxX);
+                fab.setY(prefs.getFloat("fy", 1f) * maxY);
+            }
+        });
+
+        fab.setOnTouchListener(new View.OnTouchListener() {
+            private float downX, downY, startX, startY;
+            private boolean dragging;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                View parent = (View) v.getParent();
+                switch (e.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        downX = e.getRawX();
+                        downY = e.getRawY();
+                        startX = v.getX();
+                        startY = v.getY();
+                        dragging = false;
+                        v.getParent().requestDisallowInterceptTouchEvent(true);
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        float dx = e.getRawX() - downX;
+                        float dy = e.getRawY() - downY;
+                        if (!dragging && (Math.abs(dx) > slop || Math.abs(dy) > slop)) {
+                            dragging = true;
+                        }
+                        if (dragging) {
+                            float maxX = Math.max(0, parent.getWidth() - v.getWidth());
+                            float maxY = Math.max(0, parent.getHeight() - v.getHeight());
+                            v.setX(Math.min(Math.max(0f, startX + dx), maxX));
+                            v.setY(Math.min(Math.max(0f, startY + dy), maxY));
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        if (dragging) {
+                            float maxX = Math.max(1, parent.getWidth() - v.getWidth());
+                            float maxY = Math.max(1, parent.getHeight() - v.getHeight());
+                            prefs.edit().putFloat("fx", v.getX() / maxX)
+                                    .putFloat("fy", v.getY() / maxY).apply();
+                        } else {
+                            v.performClick();
+                        }
+                        return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
     }
 
     // ------------------------------------------------------------------
@@ -295,8 +376,57 @@ public class MainActivity extends Activity
     // Picking, restoring and re-linking videos
     // ------------------------------------------------------------------
 
-    private void openVideoPicker(int requestCode, boolean multiple) {
-        // ACTION_OPEN_DOCUMENT opens the system file browser. No storage permission is needed.
+    /** Shows the in-app chooser popup (asks for storage permission first when needed). */
+    private void openVideoPicker(final int requestCode, final boolean multiple) {
+        if (!hasStoragePermission()) {
+            pendingPickRequest = requestCode;
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQ_STORAGE_PERM);
+            return;
+        }
+        VideoChooserDialog.show(this, multiple, new VideoChooserDialog.Callback() {
+            @Override
+            public void onSelected(List<File> files) {
+                List<Uri> uris = new ArrayList<Uri>();
+                for (File f : files) uris.add(Uri.fromFile(f));
+                if (requestCode == REQ_RELINK) {
+                    if (!uris.isEmpty()) handleRelinkedUri(uris.get(0));
+                } else {
+                    handlePickedUris(uris);
+                }
+            }
+
+            @Override
+            public void onUseSystemPicker() {
+                openSystemPicker(requestCode, multiple);
+            }
+        });
+    }
+
+    private boolean hasStoragePermission() {
+        if (Build.VERSION.SDK_INT < 23) return true;
+        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQ_STORAGE_PERM) return;
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (granted) {
+            openVideoPicker(pendingPickRequest, pendingPickRequest == REQ_PICK);
+        } else {
+            Toast.makeText(this, "Storage permission denied. Using system picker.",
+                    Toast.LENGTH_LONG).show();
+            openSystemPicker(pendingPickRequest, pendingPickRequest == REQ_PICK);
+        }
+    }
+
+    /** The original system file browser (ACTION_OPEN_DOCUMENT), kept as a fallback. */
+    private void openSystemPicker(int requestCode, boolean multiple) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("video/*");
@@ -325,7 +455,7 @@ public class MainActivity extends Activity
 
         if (requestCode == REQ_PICK) {
             if (resultCode != RESULT_OK || data == null) return;
-            final List<Uri> uris = new ArrayList<Uri>();
+            List<Uri> uris = new ArrayList<Uri>();
             ClipData clip = data.getClipData();
             if (clip != null) {
                 for (int i = 0; i < clip.getItemCount(); i++) {
@@ -335,62 +465,14 @@ public class MainActivity extends Activity
             } else if (data.getData() != null) {
                 uris.add(data.getData());
             }
-            if (uris.isEmpty()) return;
-            ioExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    final List<VideoFile> added = new ArrayList<VideoFile>();
-                    for (Uri uri : uris) {
-                        takePersistablePermission(uri);
-                        VideoFile v = PlaylistRepository.loadVideoFromUri(getApplicationContext(), uri);
-                        if (v != null) added.add(v);
-                    }
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!added.isEmpty()) {
-                                PlaylistRepository.addFiles(added, MainActivity.this);
-                                Toast.makeText(MainActivity.this,
-                                        "Added " + added.size() + " video(s)",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this,
-                                        "Could not load selected videos.",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-            });
+            handlePickedUris(uris);
 
         } else if (requestCode == REQ_RELINK) {
-            final VideoFile old = pendingRelinkFile;
-            pendingRelinkFile = null;
-            if (resultCode != RESULT_OK || data == null || data.getData() == null || old == null) {
+            if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+                pendingRelinkFile = null;
                 return;
             }
-            final Uri uri = data.getData();
-            ioExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    takePersistablePermission(uri);
-                    final VideoFile video =
-                            PlaylistRepository.loadVideoFromUri(getApplicationContext(), uri);
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (video != null) {
-                                PlaylistRepository.replaceFile(old.id, video, MainActivity.this);
-                                Toast.makeText(MainActivity.this, "Re-linked: " + video.title,
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Could not open selected file",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-            });
+            handleRelinkedUri(data.getData());
 
         } else if (requestCode == REQ_WRITE) {
             if (resultCode == RESULT_OK) {
@@ -402,6 +484,63 @@ public class MainActivity extends Activity
                 exitEditingMode();
             }
         }
+    }
+
+    private void handlePickedUris(final List<Uri> uris) {
+        if (uris.isEmpty()) return;
+        ioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final List<VideoFile> added = new ArrayList<VideoFile>();
+                for (Uri uri : uris) {
+                    takePersistablePermission(uri);
+                    VideoFile v = PlaylistRepository.loadVideoFromUri(getApplicationContext(), uri);
+                    if (v != null) added.add(v);
+                }
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!added.isEmpty()) {
+                            PlaylistRepository.addFiles(added, MainActivity.this);
+                            Toast.makeText(MainActivity.this,
+                                    "Added " + added.size() + " video(s)",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this,
+                                    "Could not load selected videos.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void handleRelinkedUri(final Uri uri) {
+        final VideoFile old = pendingRelinkFile;
+        pendingRelinkFile = null;
+        if (old == null) return;
+        ioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                takePersistablePermission(uri);
+                final VideoFile video =
+                        PlaylistRepository.loadVideoFromUri(getApplicationContext(), uri);
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (video != null) {
+                            PlaylistRepository.replaceFile(old.id, video, MainActivity.this);
+                            Toast.makeText(MainActivity.this, "Re-linked: " + video.title,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Could not open selected file",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private void restoreSavedPlaylist() {
@@ -454,7 +593,7 @@ public class MainActivity extends Activity
 
     private void removeVideo(final VideoFile videoFile) {
         if (adapter.getEditingPosition() != NO_POSITION) exitEditingMode();
-        new AlertDialog.Builder(this)
+        DialogStyler.shrink(new AlertDialog.Builder(this)
                 .setTitle("Remove video?")
                 .setMessage("Remove \"" + videoFile.title
                         + "\" from the list? The original file on disk is not deleted.")
@@ -467,7 +606,7 @@ public class MainActivity extends Activity
                     }
                 })
                 .setNegativeButton("Cancel", null)
-                .show();
+                .show());
     }
 
     // ------------------------------------------------------------------
