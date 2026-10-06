@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="@android:color/white"
     android:fitsSystemWindows="true">
 
     <TextView
@@ -35,7 +35,7 @@
             android:padding="8dp"
             android:visibility="gone"
             android:src="@drawable/arrow_back_24px"
-            android:tint="@color/white"
+            android:tint="@color/titleColor"
             android:background="@android:color/transparent"
             android:contentDescription="Exit Edit Mode" />
 
@@ -46,7 +46,7 @@
             android:layout_weight="1"
             android:visibility="gone"
             android:text="Edit Title"
-            android:textColor="@android:color/white"
+            android:textColor="@color/titleColor"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:src="@drawable/sort_24px"
-            android:tint="@color/white"
+            android:tint="@color/titleColor"
             android:background="@android:color/transparent"
             android:contentDescription="Sort By Criterion" />
 
@@ -75,7 +75,7 @@
             android:layout_marginEnd="8dp"
             android:padding="8dp"
             android:src="@drawable/descending_24px"
-            android:tint="@color/white"
+            android:tint="@color/titleColor"
             android:background="@android:color/transparent"
             android:contentDescription="Toggle Sort Direction" />
 
